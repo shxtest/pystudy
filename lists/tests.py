@@ -3,6 +3,7 @@ from django.core.urlresolvers import resolve
 from lists.views import home_page
 from django.http import HttpRequest
 from django.template.loader import render_to_string
+from lists.models import Item
 
 # Create your tests here.
 #为首页视图编写单元测试
@@ -44,6 +45,28 @@ class HomePageTest(TestCase):
             {'new_item_text': 'A new list item'}
             )
         self.assertEqual(response.content.decode(), expected_html)
+
+
+class ItemModelTest(TestCase):
+    def test_SavingAndRetrievingItems(self):
+        item_1 = Item()
+        item_1.text = '第一个ever list item'
+        item_1.save()
+        
+        item_2 = Item()
+        item_2.text = '第二个ever list item'
+        item_2.save()
+
+        saved_items = Item.objects.all()
+        self.assertEqual(saved_items.count(), 2)
+
+        first_saved_item = saved_items[0]
+        second_saved_item = saved_items[1]
+        self.assertEqual(first_saved_item.text, '第一个ever list item')
+        self.assertEqual(second_saved_item.text, '第二个ever list item')
+
+        
+    
 
 
         
