@@ -7,7 +7,7 @@ from lists.models import Item
 
 # Create your tests here.
 #为首页视图编写单元测试
-class HomePageTest(TestCase): 
+class HomePageTest(TestCase):
 #通过'/'指向首页home_page
     def test_RootUrlResolveToHomePageView(self):
         found = resolve('/')

@@ -4,28 +4,33 @@ from selenium import webdriver
 import unittest
 from selenium.webdriver.common.keys import Keys
 import time
+from django.test import LiveServerTestCase
 
 
-class NewVisitorTest(unittest.TestCase):
+class NewVisitorTest(LiveServerTestCase):
 #初始化浏览器
     def setUp(self):
-        self.driver = webdriver.Firefox()
+        
+        self.driver = webdriver.Ie()
+#        self.driver = webdriver.Firefox()
         self.driver.implicitly_wait(10)      #隐式等待时间
 
 #关闭浏览器        
     def tearDown(self):
+        
         self.driver.quit()
         
 #重构功能测试
     def CheckForRowInListTable(self, row_text):
         table = self.driver.find_element_by_id('id_list_table')
+        
         rows = table.find_elements_by_tag_name('tr')
         self.assertIn(row_text, [row.text for row in rows])
         
 #测试用例
     def test_CanStartAListAndRetrieveItLater(self):
 #打开网页应用
-        self.driver.get('http://127.0.0.1:8000')
+        self.driver.get(self.live_server_url)
         
         self.assertIn('To-Do',self.driver.title)
         header_text = self.driver.find_element_by_tag_name('h1').text
@@ -63,8 +68,5 @@ class NewVisitorTest(unittest.TestCase):
 
 # 她访问那个URL，发现待办事项清单还在
 
-
-if __name__ == '__main__':
-    unittest.main(warnings = 'ignore')
     
         
