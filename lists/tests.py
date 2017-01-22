@@ -22,10 +22,6 @@ class HomePageTest(TestCase):
     def test_HomePageReturnsCorrectHtml(self):
         request = HttpRequest()    
         response = home_page(request)
-        
-        #self.assertTrue(response.content.startswith(b'<html>'))      
-        #self.assertIn(b'<title>To-Do lists</title>',response.content)   
-        #self.assertTrue(response.content.endswith(b'</html>'))
 
 #测试模板是否正确渲染
         expected_html = render_to_string('home.html')
@@ -38,15 +34,40 @@ class HomePageTest(TestCase):
         request.POST['item_text'] = 'A new list item'
 
         response = home_page(request)
-        self.assertIn('A new list item', response.content.decode())
-#测试模板是否正确渲染
-        expected_html = render_to_string(
-            'home.html',
-            {'new_item_text': 'A new list item'}
-            )
-        self.assertEqual(response.content.decode(), expected_html)
 
+        self.assertEqual(Item.objects.count(), 1)       #检查是否把Item对象存入数据库
+        new_item = Item.objects.first()     # 等价于 objects.all()[0]
+        self.assertEqual(new_item.text, 'A new list item')      # 检查待办事项的text是否正确
 
+# 检查处理请求返回的状态，及重定向是否正确        
+    def test_HomePageRedirectsAfterPOST(self):
+        request = HttpRequest()
+        request.method = 'POST'
+        request.POST['item_text'] = 'A new list item'
+
+        response = home_page(request)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['location'], '/')     
+
+# 一个测试只测一件事
+    def test_HomePageOnlySavesItemsWhennecessary(self):
+        request = HttpRequest()
+        home_page(request)
+        self.assertEqual(Item.objects.count(), 0)
+        
+# 检查模板是否能显示多个待办事项
+    def test_HomePageDisplaysAllListItems(self):
+        Item.objects.create(text = 'itemey 1')
+        Item.objects.create(text = 'itemey 2')
+
+        request = HttpRequest()
+        response = home_page(request)
+
+        self.assertIn('itemey 1', response.content.decode())
+        self.assertIn('itemey 2', response.content.decode())      
+        
+# 定义ItemModelTest（）方法
 class ItemModelTest(TestCase):
     def test_SavingAndRetrievingItems(self):
         item_1 = Item()
