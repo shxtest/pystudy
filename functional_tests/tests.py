@@ -42,11 +42,14 @@ class NewVisitorTest(LiveServerTestCase):
             inputbox.get_attribute('placeholder'),
             'Enter a to-do item'
             )
-# 她按回车键后，页面更新了
-# 待办事项表格中显示了"1: Buy peacock feathers"
+
         inputbox.send_keys('Buy peacock feathers')
         
+# 她按回车键后，页面更新了
+# 待办事项表格中显示了"1: Buy peacock feathers"       
         inputbox.send_keys(Keys.ENTER)
+        edith_list_url = self.driver.current_url
+        self.assertRegex(edith_list_url, '/lists/.+')
         self.CheckForRowInListTable('1: Buy peacock feathers')
         
 #页面中还有一个文本，可以输入其他的待办事项
@@ -60,13 +63,39 @@ class NewVisitorTest(LiveServerTestCase):
         self.CheckForRowInListTable('2: Use peacock feathers to make a fly')
         self.CheckForRowInListTable('1: Buy peacock feathers')
         
+# 现在有一个新用户访问了网站
 
-# 她想知道这个网站是 否会记住她的清单
-# 她看到网站为她生成了一个唯一的URL
-# 页面中有一些文字解决这个功能
-        self.fail('Finish the test!')       #提醒测试结束
+## 使用一个新浏览器会话
+## 确保前一个用户的信息不会从cookie中泄露出去
+        self.driver.quit()
+        self.driver = webdriver.Ie()
 
-# 她访问那个URL，发现待办事项清单还在
+# 新用户访问首页
+# 页面中看不到前一个用户的清单
+        self.driver.get(edith_list_url)
+        page_text = self.driver.find_element_by_tag_name('body').text
+        self.assertNotIn('Buy peacock feathers', page_text)
+        self.assertNotIn('make a fly', page_text)
+        
+# 新用户输入1个新待办事项，新建一个清单
+# 新用户不像前一个用户那样兴趣盎然
+        inputbox = self.driver.find_element_by_id('id_new_item')
+        inputbox.send_keys('Buy milk')
+        inputbox.send_keys(Keys.ENTER)
 
-    
+# 新用户获得了唯一的URL
+        new_list_url = self.driver.current_url
+        self.assertRegex(new_list_url, '/lists/.+')
+        self.assertNotIn(new_list_url, edith_list_url)
+        
+# 这个页面还是没有前一个用户的清单
+        page_text = self.driver.find_element_by_tag_name('body').text
+        self.assertNotIn('Buy peacock feathers', page_text)
+        self.assertIn('Buy milk', page_text)
+        
+# 大家都很满意，去睡觉了
+
+
+
+
         
