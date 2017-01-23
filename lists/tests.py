@@ -27,46 +27,6 @@ class HomePageTest(TestCase):
         expected_html = render_to_string('home.html')
         self.assertEqual(response.content.decode(), expected_html)
 
-# 检查返回的HTML中是否有新添加的待办事项
-    def test_HomePageCanSaveAPostRequest(self):
-        request = HttpRequest()
-        request.method = 'POST'
-        request.POST['item_text'] = 'A new list item'
-
-        response = home_page(request)
-
-        self.assertEqual(Item.objects.count(), 1)       # 检查是否把Item对象存入数据库
-        new_item = Item.objects.first()     # 等价于 objects.all()[0]
-        self.assertEqual(new_item.text, 'A new list item')      # 检查待办事项的text是否正确
-
-# 检查处理请求返回的状态，及重定向是否正确        
-    def test_HomePageRedirectsAfterPOST(self):
-        request = HttpRequest()
-        request.method = 'POST'
-        request.POST['item_text'] = 'A new list item'
-
-        response = home_page(request)
-
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response['location'], '/lists/the-only-list-in-the-world/')
-
-# 一个测试只测一件事
-    def test_HomePageOnlySavesItemsWhennecessary(self):
-        request = HttpRequest()
-        home_page(request)
-        self.assertEqual(Item.objects.count(), 0)
-        
-# 检查模板是否能显示多个待办事项
-#    def test_HomePageDisplaysAllListItems(self):
-#        Item.objects.create(text='itemey 1')
-#        Item.objects.create(text='itemey 2')
-
-#        request = HttpRequest()
-#        response = home_page(request)
-
-#        self.assertIn('itemey 1', response.content.decode())
-#        self.assertIn('itemey 2', response.content.decode())
-
 
 # 定义ItemModelTest（）方法
 class ItemModelTest(TestCase):
@@ -97,14 +57,29 @@ class ListviewTest(TestCase):
 
 
     def test_displays_all_items(self):
-        Item.objects.create(text = 'itemey 1')
-        Item.objects.create(text = 'itemey 2')
+        Item.objects.create(text='itemey 1')
+        Item.objects.create(text='itemey 2')
 
         response = self.client.get('/lists/the-only-list-in-the-world/')
 
         self.assertContains(response, 'itemey 1')
-        self.assertContains(response, 'itemey 2')   
-        
+        self.assertContains(response, 'itemey 2')
+
+
+class NewListTest(TestCase):
+
+    def test_save_a_post_request(self):
+        self.client.get('/lists/new', data={'item_text': 'A new list item'})         # 使用client重写post请求
+
+        self.assertEqual(Item.objects.count(), 1)  # 检查是否把Item对象存入数据库
+        new_item = Item.objects.first()  # 等价于 objects.all()[0]
+        self.assertEqual(new_item.text, 'A new list item')  # 检查待办事项的text是否正确
+
+# 检查处理请求返回的状态，及重定向是否正确
+    def test_redirects_after_POST(self):
+        response = self.client.post('/lists/new', data={'item_text': 'A new list item'})     # 使用client重写post请求
+        self.assertRedirects(response, '/lists/the-only-list-in-the-world/')
+
 
         
     
